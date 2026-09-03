@@ -154,23 +154,35 @@ export const StudyLog = () => {
         )}
       </AnimatePresence>
 
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold font-heading">Study Log & Timer</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Track your focused study sessions.</p>
+      <header className="mb-6 md:mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading">Deep Work Log</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Focus on one thing. Track your hours.</p>
+        </div>
       </header>
 
-      {/* Timer & Add Session Form */}
-      <section className="glass-panel p-6">
-        <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
-          <div className="w-full md:w-1/2 space-y-4">
+      {/* Focus Mode Panel */}
+      <section className={`glass-panel p-4 md:p-6 transition-all duration-700 relative overflow-hidden ${
+        isTimerRunning 
+          ? 'ring-4 ring-indigo-500/50 shadow-2xl shadow-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 scale-[1.02]' 
+          : ''
+      }`}>
+        {/* Ambient background glow when focusing */}
+        {isTimerRunning && (
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-blue-500/10 animate-pulse pointer-events-none" />
+        )}
+        
+        <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
+          <div className="flex-1 w-full space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Topic / Chapter</label>
+              <label className="block text-sm font-medium mb-1">What are you studying?</label>
               <input 
                 type="text" 
                 value={topic}
-                onChange={e => setTopic(e.target.value)}
-                placeholder="e.g. Graph Theory properties"
-                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 focus:ring-2 ring-blue-500 outline-none transition-all"
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="e.g. C Programming: Pointers"
+                disabled={isTimerRunning}
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 outline-none focus:ring-2 ring-blue-500 disabled:opacity-50"
               />
             </div>
             <div className="flex gap-4">

@@ -52,61 +52,61 @@ export const Calendar = () => {
   }
 
   return (
-    <div className="space-y-6 relative pb-32">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold font-heading">Study Consistency Heatmap</h1>
+    <div className="space-y-6 pb-24">
+      <header className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold font-heading">Study Consistency Heatmap</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Track your 22-week journey day by day.</p>
       </header>
 
-      <section className="glass-panel p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2 font-bold font-heading text-lg">
+      <div className="glass-panel p-4 md:p-6 overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <h2 className="text-lg md:text-xl font-bold font-heading flex items-center gap-2">
             <CalendarIcon className="text-blue-500" />
             22-Week Progress
-          </div>
-          
-          {/* Legend */}
-          <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+          </h2>
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             <span>Less</span>
-            <div className="w-3 h-3 rounded-sm bg-slate-200/50 dark:bg-slate-800/50" />
-            <div className="w-3 h-3 rounded-sm bg-emerald-300 dark:bg-emerald-400" />
-            <div className="w-3 h-3 rounded-sm bg-emerald-500" />
-            <div className="w-3 h-3 rounded-sm bg-emerald-700 dark:bg-emerald-600" />
+            <div className="flex gap-1">
+              <div className="w-3 h-3 rounded-sm bg-slate-100 dark:bg-slate-800" />
+              <div className="w-3 h-3 rounded-sm bg-emerald-300 dark:bg-emerald-800/60" />
+              <div className="w-3 h-3 rounded-sm bg-emerald-500" />
+              <div className="w-3 h-3 rounded-sm bg-emerald-700" />
+            </div>
             <span>More</span>
           </div>
         </div>
 
-        {/* Heatmap Grid */}
         <div className="overflow-x-auto pb-4 hide-scrollbar">
-          <div className="inline-flex flex-col gap-1.5 min-w-max">
-            {/* Week Headers */}
-            <div className="flex gap-1.5 mb-2 pl-6">
-              {weeks.map((_, i) => (
-                <div key={i} className="w-4 flex justify-center text-[10px] text-slate-400 font-medium">
-                  {i % 4 === 0 ? i + 1 : ''}
-                </div>
-              ))}
+          <div className="inline-flex gap-1 md:gap-1.5 min-w-max">
+            {/* Y-axis labels (Days of week) */}
+            <div className="flex flex-col gap-1 md:gap-1.5 mt-[22px] md:mt-[26px] mr-2 text-[10px] md:text-xs text-slate-400 font-medium">
+              <div className="h-4 md:h-5" /> {/* Sun */}
+              <div className="h-4 md:h-5 flex items-center">Mon</div>
+              <div className="h-4 md:h-5" /> {/* Tue */}
+              <div className="h-4 md:h-5 flex items-center">Wed</div>
+              <div className="h-4 md:h-5" /> {/* Thu */}
+              <div className="h-4 md:h-5 flex items-center">Fri</div>
+              <div className="h-4 md:h-5" /> {/* Sat */}
             </div>
-            
-            {/* Days Grid (Transposed: Rows are Day of Week, Cols are Weeks) */}
-            {[0, 1, 2, 3, 4, 5, 6].map(dayOfWeek => (
-              <div key={dayOfWeek} className="flex gap-1.5 items-center">
-                {/* Day Labels */}
-                <div className="w-5 text-[10px] text-slate-400 font-medium pr-1 text-right">
-                  {dayOfWeek === 1 ? 'Mon' : dayOfWeek === 3 ? 'Wed' : dayOfWeek === 5 ? 'Fri' : ''}
+
+            {/* Grid */}
+            {weeks.map((week, wIdx) => (
+              <div key={wIdx} className="flex flex-col gap-1 md:gap-1.5">
+                {/* X-axis labels (Week numbers, every 4 weeks) */}
+                <div className="h-4 md:h-5 text-[10px] md:text-xs text-slate-400 font-medium text-center mb-1">
+                  {wIdx % 4 === 0 ? wIdx + 1 : ''}
                 </div>
                 
-                {weeks.map((week, weekIdx) => {
-                  const dayData = week[dayOfWeek]
-                  if (!dayData) return <div key={weekIdx} className="w-4 h-4" />
+                {week.map((dayData, dIdx) => {
+                  if (!dayData) return <div key={dIdx} className="w-4 h-4 md:w-5 md:h-5" />
                   
                   return (
                     <motion.div
-                      key={weekIdx}
+                      key={dIdx}
                       onMouseEnter={() => setHoveredDay(dayData)}
                       onMouseLeave={() => setHoveredDay(null)}
                       whileHover={{ scale: 1.2, zIndex: 10 }}
-                      className={`w-4 h-4 rounded-sm cursor-pointer transition-colors ${getColor(dayData.totalMinutes)}`}
+                      className={`w-4 h-4 md:w-5 md:h-5 rounded-sm cursor-pointer transition-colors ${getColor(dayData.totalMinutes)}`}
                     />
                   )
                 })}

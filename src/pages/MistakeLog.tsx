@@ -46,17 +46,17 @@ export const MistakeLog = () => {
 
   return (
     <div className="space-y-6 pb-24">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold font-heading text-rose-600 dark:text-rose-400 flex items-center gap-2">
-            <AlertTriangle size={28} />
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-rose-600 dark:text-rose-400 flex items-center gap-2">
+            <AlertTriangle size={24} className="md:w-7 md:h-7" />
             Mistake Log
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2">Log errors to never repeat them. Analysis is key to rank improvement.</p>
         </div>
         <button 
           onClick={() => setIsFormOpen(!isFormOpen)}
-          className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-full font-bold transition-all shadow-lg shadow-rose-500/30 flex items-center gap-2"
+          className="bg-rose-500 hover:bg-rose-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-full font-bold transition-all shadow-lg shadow-rose-500/30 flex items-center gap-2 justify-center"
         >
           {isFormOpen ? 'Cancel' : <><Plus size={20} /> Add Mistake</>}
         </button>
@@ -71,7 +71,7 @@ export const MistakeLog = () => {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="glass-panel p-6 border border-rose-500/20 mb-8">
+            <div className="glass-panel p-4 md:p-6 border border-rose-500/20 mb-8">
               <h2 className="text-xl font-bold font-heading mb-6">Log a New Error</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -180,7 +180,7 @@ export const MistakeLog = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               key={mistake.id} 
-              className="glass-card flex flex-col md:flex-row gap-6 !p-6 border-l-4 border-l-rose-500 relative group overflow-hidden"
+              className="glass-card flex flex-col md:flex-row gap-6 !p-4 md:!p-6 border-l-4 border-l-rose-500 relative group overflow-hidden"
             >
               {/* Difficulty Banner */}
               <div className={`absolute top-0 right-0 px-3 py-1 text-xs font-bold rounded-bl-xl ${

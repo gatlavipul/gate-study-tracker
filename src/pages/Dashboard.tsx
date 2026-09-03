@@ -75,7 +75,7 @@ export const Dashboard = () => {
       </section>
 
       {/* Today's Status Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[
           { title: "Today's Target", value: `${dailyTargetHours}h 00m`, icon: Clock, color: "text-blue-500" },
           { title: "Completed", value: formatMins(completedMinutes), icon: TrendingUp, color: "text-emerald-500" },
@@ -87,24 +87,84 @@ export const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="glass-card flex items-center gap-4"
+            className="glass-card flex flex-col md:flex-row items-start md:items-center gap-3 p-3 md:p-4"
           >
-            <div className={`p-3 rounded-xl bg-slate-100 dark:bg-slate-800 ${stat.color}`}>
-              <stat.icon size={24} />
+            <div className={`p-2 md:p-3 rounded-xl bg-slate-100 dark:bg-slate-800 ${stat.color}`}>
+              <stat.icon size={20} className="md:w-6 md:h-6" />
             </div>
             <div>
-              <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">{stat.title}</div>
-              <div className="text-xl font-bold">{stat.value}</div>
+              <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">{stat.title}</div>
+              <div className="text-lg md:text-xl font-bold">{stat.value}</div>
             </div>
           </motion.div>
         ))}
       </section>
       
-      {/* Week at a glance placeholder */}
-      <section className="glass-panel p-6 mt-8">
-        <h2 className="text-xl font-bold font-heading mb-4">Week at a Glance</h2>
-        <div className="h-48 flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
-          Progress Chart Placeholder
+      {/* Daily Study Plan Timeline */}
+      <section className="glass-panel p-4 md:p-6 mt-8">
+        <h2 className="text-lg md:text-xl font-bold font-heading mb-6 flex items-center gap-2">
+          <Clock size={20} className="text-blue-500" />
+          Today's Study Plan
+        </h2>
+        
+        <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
+          {(() => {
+            const currentWeekTopics = syllabusPlan[activeWeekIndex]?.topics || '';
+            const subtopics = currentWeekTopics.split(/[.,]/).map(s => s.trim()).filter(s => s.length > 4);
+            const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday...
+            
+            // Generate schedule for today
+            let todaysTasks: string[] = [];
+            let isWeekendPlan = isWeekend(today);
+
+            if (isWeekendPlan) {
+              todaysTasks = ['Full-length or Subject-wise Mock Test', 'Deep Review of Error Log', 'Revise weak concepts from Mon-Fri'];
+            } else {
+              // Pick 1-2 topics based on day of week to spread them out
+              const startIndex = (dayOfWeek - 1) % Math.max(1, subtopics.length);
+              todaysTasks = [subtopics[startIndex]];
+              if (subtopics.length > 1 && dayOfWeek % 2 === 0) {
+                 todaysTasks.push(subtopics[(startIndex + 1) % subtopics.length]);
+              }
+            }
+
+            return todaysTasks.map((task, idx) => (
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                key={idx} 
+                className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
+              >
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white dark:border-slate-900 bg-blue-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                
+                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass-card p-4 hover:shadow-md transition-shadow">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm md:text-base mb-2">{task || 'General Revision'}</h3>
+                  
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <a 
+                      href={`https://www.youtube.com/results?search_query=GATE+Wallah+CSE+${encodeURIComponent(task || 'revision')}`}
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400 px-2.5 py-1.5 rounded-md hover:bg-red-500/20 transition-colors"
+                    >
+                      ▶ Watch Lecture
+                    </a>
+                    <a 
+                      href={`https://gateoverflow.in/`}
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1.5 rounded-md hover:bg-blue-500/20 transition-colors"
+                    >
+                      📝 Solve PYQs
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          })()}
         </div>
       </section>
     </div>
