@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Target, TrendingUp, Trophy, Trash2, Clock, Play, Pause, Square, X } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
+import { Plus, Target, TrendingUp, Trophy, Trash2, Clock, Play } from 'lucide-react'
 import { useAppStore, type SubjectPhase } from '../store/useAppStore'
 import { format, parseISO } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
 import {
   CartesianGrid,
   Tooltip,
@@ -14,46 +15,9 @@ import {
 } from 'recharts'
 
 export const MockTracker = () => {
+  const navigate = useNavigate()
   const { mockTests, addMockTest, deleteMockTest } = useAppStore()
   const [isAdding, setIsAdding] = useState(false)
-  const [isSimulating, setIsSimulating] = useState(false)
-
-  // Timer State
-  const [timeLeft, setTimeLeft] = useState(10800) // 3 hours
-  const [isTimerRunning, setIsTimerRunning] = useState(false)
-
-  // Timer effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isSimulating && isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(prev => prev - 1)
-      }, 1000)
-    } else if (timeLeft === 0 && isTimerRunning) {
-      setIsTimerRunning(false)
-      alert("Time's up! GATE Exam Simulation Complete.")
-    }
-    return () => clearInterval(interval)
-  }, [isSimulating, isTimerRunning, timeLeft])
-
-  const formatTimer = (seconds: number) => {
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
-    const s = seconds % 60
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-  }
-
-  const toggleSimulator = () => {
-    if (isSimulating) {
-      if (window.confirm("End the simulation? Timer will be reset.")) {
-        setIsSimulating(false)
-        setIsTimerRunning(false)
-        setTimeLeft(10800)
-      }
-    } else {
-      setIsSimulating(true)
-    }
-  }
 
   // Form State
   const [name, setName] = useState('')
@@ -100,10 +64,10 @@ export const MockTracker = () => {
         </div>
         <div className="flex gap-2">
           <button 
-            onClick={toggleSimulator}
+            onClick={() => navigate('/mocks/take')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 md:px-4 py-2 rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/30 flex items-center gap-2 text-sm md:text-base"
           >
-            <Clock size={18} /> {isSimulating ? 'End Exam' : '3-Hr Simulator'}
+            <Play size={18} fill="currentColor" /> Start Mock Test
           </button>
           <button 
             onClick={() => setIsAdding(!isAdding)}
@@ -113,47 +77,6 @@ export const MockTracker = () => {
           </button>
         </div>
       </header>
-
-      {/* Simulator Mode Fullscreen Overlay */}
-      <AnimatePresence>
-        {isSimulating && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center text-white p-6"
-          >
-            <button onClick={toggleSimulator} className="absolute top-8 right-8 text-slate-400 hover:text-white">
-              <X size={32} />
-            </button>
-            <div className="text-center max-w-2xl w-full">
-              <h2 className="text-3xl font-heading font-bold text-indigo-400 mb-2">GATE Exam Simulator</h2>
-              <p className="text-slate-400 mb-12">Treat this exactly like the real 3-hour exam. No distractions.</p>
-              
-              <div className="text-[15vw] md:text-9xl font-mono font-bold tracking-tighter mb-12 tabular-nums">
-                {formatTimer(timeLeft)}
-              </div>
-              
-              <div className="flex items-center justify-center gap-6">
-                <button 
-                  onClick={() => setIsTimerRunning(!isTimerRunning)}
-                  className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105 active:scale-95 ${
-                    isTimerRunning ? 'bg-amber-500 shadow-amber-500/30' : 'bg-emerald-500 shadow-emerald-500/30'
-                  }`}
-                >
-                  {isTimerRunning ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-2" />}
-                </button>
-                <button 
-                  onClick={() => { setIsTimerRunning(false); setTimeLeft(10800); }}
-                  className="w-16 h-16 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition-colors"
-                >
-                  <Square size={24} fill="currentColor" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Input Form */}
       {isAdding && (

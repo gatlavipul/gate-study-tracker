@@ -1,11 +1,13 @@
 import { useAppStore } from '../store/useAppStore'
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import { format, parseISO, subDays, isSameDay } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
 
 const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f43f5e', '#f59e0b', '#06b6d4', '#84cc16']
 
 export const Analytics = () => {
-  const { sessions } = useAppStore()
+  const { sessions, mockTests } = useAppStore()
+  const navigate = useNavigate()
 
   // Prepare data for Subject Phase Distribution
   const phaseDataMap = new Map<string, number>()
@@ -29,6 +31,19 @@ export const Analytics = () => {
       hours: Number((totalMins / 60).toFixed(1))
     }
   })
+
+  // Prepare data for Subject Mastery (Radar Chart)
+  const subjectScores = new Map<string, number>()
+  mockTests.forEach(test => {
+    Object.entries(test.sectionScores).forEach(([subject, score]) => {
+      const current = subjectScores.get(subject) || 0
+      subjectScores.set(subject, current + score)
+    })
+  })
+  const radarData = Array.from(subjectScores.entries()).map(([subject, score]) => ({
+    subject,
+    score: Math.max(0, Number(score.toFixed(1))) // Don't show negative radii
+  }))
 
   const totalHoursEver = Math.round(sessions.reduce((acc, s) => acc + s.durationMinutes, 0) / 60)
 
@@ -70,7 +85,12 @@ export const Analytics = () => {
           <h2 className="text-xl font-bold font-heading mb-6 text-slate-700 dark:text-slate-200">Time by Subject (Hours)</h2>
           <div className="h-64 flex items-center justify-center">
             {phaseData.length === 0 ? (
-              <div className="text-slate-400">No data to display yet.</div>
+              <div className="text-center">
+                <div className="text-slate-400 mb-4">No data to display yet.</div>
+                <button onClick={() => navigate('/log')} className="text-sm bg-blue-100 hover:bg-blue-200 text-blue-600 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 px-4 py-2 rounded-lg transition-colors font-semibold">
+                  Log a Study Session
+                </button>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -102,6 +122,33 @@ export const Analytics = () => {
                 {entry.name} ({entry.value}h)
               </div>
             ))}
+          </div>
+        </div>
+        
+        {/* Radar Chart: Subject Mastery from Mocks */}
+        <div className="glass-panel p-6 lg:col-span-2">
+          <h2 className="text-xl font-bold font-heading mb-6 text-slate-700 dark:text-slate-200">Subject Mastery (Based on Test Scores)</h2>
+          <div className="h-80 flex items-center justify-center">
+            {radarData.length === 0 ? (
+              <div className="text-center">
+                <div className="text-slate-400 mb-4">Take a mock test to see your strong & weak subjects.</div>
+                <button onClick={() => navigate('/mocks')} className="text-sm bg-purple-100 hover:bg-purple-200 text-purple-600 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 dark:text-purple-400 px-4 py-2 rounded-lg transition-colors font-semibold">
+                  Take a Mock Test
+                </button>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                  <PolarGrid stroke="#cbd5e1" opacity={0.3} />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 'dataMax']} tick={false} axisLine={false} />
+                  <Radar name="Score" dataKey="score" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
+                  <RechartsTooltip 
+                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

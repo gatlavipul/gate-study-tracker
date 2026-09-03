@@ -1,14 +1,17 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { NavBar } from './components/NavBar'
 import { Dashboard } from './pages/Dashboard'
 import { StudyLog } from './pages/StudyLog'
 import { MistakeLog } from './pages/MistakeLog'
 import { MockTracker } from './pages/MockTracker'
+import { MockTestEngine } from './pages/MockTestEngine'
 import { Calendar } from './pages/Calendar'
 import { Analytics } from './pages/Analytics'
 import { Settings } from './pages/Settings'
 
 function App() {
+
   return (
     <Router>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
@@ -20,6 +23,7 @@ function App() {
               <Route path="/log" element={<StudyLog />} />
               <Route path="/mistakes" element={<MistakeLog />} />
               <Route path="/mocks" element={<MockTracker />} />
+              <Route path="/mocks/take" element={<MockTestEngine />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />

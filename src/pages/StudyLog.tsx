@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWhiteNoise } from '../hooks/useWhiteNoise'
-import { Play, Square, Plus, Trash2, Clock, Headphones } from 'lucide-react'
+import { Play, Square, Plus, Trash2, Clock, Headphones, Target } from 'lucide-react'
 import { useAppStore, type SubjectPhase, type SessionCategory } from '../store/useAppStore'
-import { format } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
+import { gatePlan } from '../data/gate2027_plan'
 
 const phases: SubjectPhase[] = ['Math', 'Programming', 'OS', 'DBMS', 'Networks', 'TOC', 'Compiler', 'COA', 'DigitalLogic', 'Aptitude']
 const categories: SessionCategory[] = ['theory', 'practice', 'revision']
@@ -18,7 +19,13 @@ const quotes = [
 ]
 
 export const StudyLog = () => {
-  const { sessions, addSession, deleteSession } = useAppStore()
+  const { sessions, addSession, deleteSession, startDate } = useAppStore()
+  
+  // Calculate today's plan
+  const daysPassed = Math.max(0, differenceInDays(new Date(), new Date(startDate)))
+  const currentDayIndex = Math.min(daysPassed, gatePlan.length - 1)
+  const todayPlan = gatePlan[currentDayIndex]
+
   const [topic, setTopic] = useState('')
   const [phase, setPhase] = useState<SubjectPhase>('Math')
   const [category, setCategory] = useState<SessionCategory>('theory')
@@ -160,6 +167,57 @@ export const StudyLog = () => {
           <p className="text-slate-500 dark:text-slate-400 mt-1">Focus on one thing. Track your hours.</p>
         </div>
       </header>
+
+      {/* Daily Target Plan */}
+      <section className="mb-8">
+        <h2 className="text-xl font-bold font-heading mb-4 flex items-center gap-2">
+          <Target size={20} className="text-emerald-500" />
+          Today's Target (Day {todayPlan.day} / {gatePlan.length})
+        </h2>
+        <div className="glass-panel p-5 md:p-6 border-l-4 border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10">
+          <h3 className="font-semibold text-lg mb-4 text-slate-800 dark:text-white">
+            Week {todayPlan.week} — {todayPlan.title.replace(`Day ${todayPlan.day}: `, '')}
+          </h3>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Topics to Learn</p>
+              <ul className="space-y-2">
+                {todayPlan.topics.map((t, idx) => (
+                  <li 
+                    key={idx} 
+                    onClick={() => {
+                      setTopic(t)
+                      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                    }}
+                    className="flex items-start gap-2 text-sm cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group"
+                  >
+                    <span className="text-emerald-500 mt-0.5 opacity-50 group-hover:opacity-100 transition-opacity">•</span>
+                    <span>{t} <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity ml-1">(Click to track)</span></span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Practice</p>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{todayPlan.practice}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Revision</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{todayPlan.revision.replace('Morning: ', '')}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Aptitude</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{todayPlan.aptitude.replace('15 min ', '')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Focus Mode Panel */}
       <section className={`glass-panel p-4 md:p-6 transition-all duration-700 relative overflow-hidden ${

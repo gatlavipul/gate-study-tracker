@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, AlertTriangle, Lightbulb, BookX, CheckCircle2 } from 'lucide-react'
 import { useAppStore, type SubjectPhase } from '../store/useAppStore'
 import { format } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
 
 const phases: SubjectPhase[] = ['Math', 'Programming', 'OS', 'DBMS', 'Networks', 'TOC', 'Compiler', 'COA', 'DigitalLogic', 'Aptitude']
 
 export const MistakeLog = () => {
   const { mistakes, addMistake, deleteMistake } = useAppStore()
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const navigate = useNavigate()
   
   // Form State
   const [topic, setTopic] = useState('')
@@ -170,8 +172,18 @@ export const MistakeLog = () => {
       {/* Mistakes List */}
       <div className="space-y-4">
         {mistakes.length === 0 ? (
-          <div className="text-center p-12 text-slate-500 glass-panel border-dashed">
-            No mistakes logged yet. Every mistake is a learning opportunity!
+          <div className="text-center p-12 text-slate-500 glass-panel border-dashed flex flex-col items-center justify-center min-h-[300px]">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+              <BookX size={32} className="text-slate-400" />
+            </div>
+            <h3 className="text-xl font-bold font-heading text-slate-700 dark:text-slate-200 mb-2">No mistakes logged yet</h3>
+            <p className="max-w-md mx-auto mb-6">Every mistake is a learning opportunity! You can manually add mistakes here, or use the 1-Click Error Logging feature after completing a Mock Test.</p>
+            <button 
+              onClick={() => navigate('/mocks')}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl transition-colors font-bold shadow-lg shadow-indigo-500/30"
+            >
+              Take a Mock Test
+            </button>
           </div>
         ) : (
           mistakes.map((mistake, i) => (

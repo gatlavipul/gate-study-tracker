@@ -1,16 +1,35 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '../store/useAppStore'
-import { Clock, BookOpen, AlertCircle, TrendingUp } from 'lucide-react'
+import { Clock, BookOpen, AlertCircle, TrendingUp, PlayCircle, FileText, Calendar as CalendarIcon, CheckCircle2, Flame } from 'lucide-react'
 import { syllabusPlan } from '../data/syllabus'
-import { differenceInWeeks, parseISO, isWeekend, isSameDay } from 'date-fns'
+import { gatePlan } from '../data/gate2027_plan'
+import { differenceInWeeks, differenceInDays, parseISO, isWeekend, isSameDay, subDays, format } from 'date-fns'
+import { generateTopicPYQs } from '../data/pyqGenerator'
+import { useNavigate } from 'react-router-dom'
 
 export const Dashboard = () => {
-  const { userName, startDate, targetHoursWeekday, targetHoursWeekend, sessions, mistakes } = useAppStore()
-  
-  // Calculate current week based on start date
+  const { userName, startDate, targetHoursWeekday, targetHoursWeekend, sessions, mistakes, streakCount } = useAppStore()
+  const navigate = useNavigate()
+
+  const launchPYQTest = (topic: string) => {
+    const questions = generateTopicPYQs(topic, 15)
+    navigate('/mocks/take', { 
+      state: { 
+        questions, 
+        duration: 2700, // 45 mins
+        title: `Topic Test: ${topic}` 
+      } 
+    })
+  }
+
+  // Calculate current week and day based on start date
   const today = new Date()
+  const daysDiff = Math.max(0, differenceInDays(today, parseISO(startDate)))
+  const currentDayIndex = Math.min(daysDiff, gatePlan.length - 1)
+  const todayPlan = gatePlan[currentDayIndex]
+  
   const weeksDiff = differenceInWeeks(today, parseISO(startDate))
-  // Week 1 is index 0. If before start date, it's week 1.
   const activeWeekIndex = Math.max(0, Math.min(21, weeksDiff))
 
   // Daily target logic
@@ -32,11 +51,37 @@ export const Dashboard = () => {
   // Pending mistakes to review
   const pendingMistakesCount = mistakes.length // Placeholder logic for MVP
 
+  // 7-day Heatmap
+  const last7Days = Array.from({ length: 7 }).map((_, i) => subDays(today, 6 - i))
+
   return (
     <div className="space-y-6">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold font-heading">Welcome back, {userName}! 👋</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Let's crush today's study goals.</p>
+      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-heading">Welcome back, {userName}! 👋</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Let's crush today's study goals.</p>
+        </div>
+        
+        {/* Streak and Heatmap */}
+        <div className="flex flex-col items-end gap-2">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 font-bold shadow-sm">
+            <Flame size={18} className={streakCount > 0 ? "text-orange-500 fill-orange-500 animate-pulse" : "text-slate-400"} />
+            {streakCount} Day Streak
+          </div>
+          <div className="flex gap-1.5">
+            {last7Days.map((date, i) => {
+              const hasStudied = sessions.some(s => isSameDay(parseISO(s.date), date))
+              const isToday = isSameDay(date, today)
+              return (
+                <div 
+                  key={i} 
+                  title={format(date, 'MMM d')}
+                  className={`w-5 h-5 rounded-sm ${hasStudied ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-200 dark:bg-slate-800'} ${isToday ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-slate-950' : ''} transition-colors`}
+                />
+              )
+            })}
+          </div>
+        </div>
       </header>
 
       {/* 22-Week Master Plan Timeline */}
@@ -100,71 +145,104 @@ export const Dashboard = () => {
         ))}
       </section>
       
-      {/* Daily Study Plan Timeline */}
-      <section className="glass-panel p-4 md:p-6 mt-8">
-        <h2 className="text-lg md:text-xl font-bold font-heading mb-6 flex items-center gap-2">
-          <Clock size={20} className="text-blue-500" />
-          Today's Study Plan
-        </h2>
+      {/* Innovative Daily Study Route Timeline */}
+      <section className="mt-12 relative">
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none rounded-t-3xl" />
         
-        <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
-          {(() => {
-            const currentWeekTopics = syllabusPlan[activeWeekIndex]?.topics || '';
-            const subtopics = currentWeekTopics.split(/[.,]/).map(s => s.trim()).filter(s => s.length > 4);
-            const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday...
+        <div className="glass-panel p-6 md:p-8 relative overflow-hidden border-t-4 border-t-blue-500">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4 relative z-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-bold mb-3">
+                <CalendarIcon size={16} /> Day {todayPlan.day} of 154
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold font-heading">Today's Study Route</h2>
+              <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Follow this exact path to complete today's targets.</p>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Week {todayPlan.week}</div>
+              <div className="font-medium text-slate-800 dark:text-slate-200">{todayPlan.title.split(' — ')[1] || todayPlan.title.split(': ')[1] || 'Weekly Target'}</div>
+            </div>
+          </div>
+          
+          <div className="relative z-10 space-y-0">
+            {/* Vertical Line */}
+            <div className="absolute top-4 bottom-4 left-[27px] md:left-1/2 w-1 bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 rounded-full opacity-20 hidden md:block"></div>
+            <div className="absolute top-4 bottom-4 left-[27px] w-1 bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 rounded-full opacity-20 md:hidden"></div>
             
-            // Generate schedule for today
-            let todaysTasks: string[] = [];
-            let isWeekendPlan = isWeekend(today);
-
-            if (isWeekendPlan) {
-              todaysTasks = ['Full-length or Subject-wise Mock Test', 'Deep Review of Error Log', 'Revise weak concepts from Mon-Fri'];
-            } else {
-              // Pick 1-2 topics based on day of week to spread them out
-              const startIndex = (dayOfWeek - 1) % Math.max(1, subtopics.length);
-              todaysTasks = [subtopics[startIndex]];
-              if (subtopics.length > 1 && dayOfWeek % 2 === 0) {
-                 todaysTasks.push(subtopics[(startIndex + 1) % subtopics.length]);
-              }
-            }
-
-            return todaysTasks.map((task, idx) => (
+            {todayPlan.topics.map((task, idx) => (
               <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.15, type: 'spring', stiffness: 100 }}
                 key={idx} 
-                className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
+                className="relative flex items-center justify-start md:justify-between md:odd:flex-row-reverse group py-6"
               >
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white dark:border-slate-900 bg-blue-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                {/* Timeline Node */}
+                <div className="absolute left-[16px] md:left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-white dark:bg-slate-900 border-4 border-blue-500 z-10 shadow-[0_0_15px_rgba(59,130,246,0.5)] flex items-center justify-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 </div>
                 
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass-card p-4 hover:shadow-md transition-shadow">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm md:text-base mb-2">{task || 'General Revision'}</h3>
-                  
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <a 
-                      href={`https://www.youtube.com/results?search_query=GATE+Wallah+CSE+${encodeURIComponent(task || 'revision')}`}
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400 px-2.5 py-1.5 rounded-md hover:bg-red-500/20 transition-colors"
-                    >
-                      ▶ Watch Lecture
-                    </a>
-                    <a 
-                      href={`https://gateoverflow.in/`}
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1.5 rounded-md hover:bg-blue-500/20 transition-colors"
-                    >
-                      📝 Solve PYQs
-                    </a>
+                {/* Content Card */}
+                <div className="ml-16 md:ml-0 w-full md:w-[calc(50%-3rem)]">
+                  <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-none border border-slate-100 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors group-hover:-translate-y-1 duration-300">
+                    <div className="flex items-center gap-2 text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">
+                      <CheckCircle2 size={14} /> Topic {idx + 1}
+                    </div>
+                    <h3 className="font-bold text-slate-800 dark:text-white text-lg mb-4">{task}</h3>
+                    
+                    <div className="flex flex-wrap gap-3">
+                      <a 
+                        href={`https://www.youtube.com/results?search_query=GATE+Wallah+CSE+${encodeURIComponent(task)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 inline-flex items-center justify-center gap-2 text-sm font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 px-4 py-2.5 rounded-xl transition-colors"
+                      >
+                        <PlayCircle size={18} /> Watch Lecture
+                      </a>
+                      <button 
+                        onClick={() => launchPYQTest(task)}
+                        className="flex-1 inline-flex items-center justify-center gap-2 text-sm font-bold bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-4 py-2.5 rounded-xl transition-colors shadow-sm"
+                      >
+                        <FileText size={18} /> Solve PYQs
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
-            ))
-          })()}
+            ))}
+
+            {/* Daily Practice & Revision Node */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: todayPlan.topics.length * 0.15, type: 'spring' }}
+              className="relative flex items-center justify-start md:justify-between md:odd:flex-row-reverse group py-6"
+            >
+              <div className="absolute left-[16px] md:left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-white dark:bg-slate-900 border-4 border-emerald-500 z-10 shadow-[0_0_15px_rgba(16,185,129,0.5)] flex items-center justify-center">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+              </div>
+              
+              <div className="ml-16 md:ml-0 w-full md:w-[calc(50%-3rem)]">
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-xl text-white transform transition-transform hover:-translate-y-1 duration-300">
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-100 uppercase tracking-wider mb-2">
+                    <TrendingUp size={14} /> Consolidation
+                  </div>
+                  <h3 className="font-bold text-xl mb-4">Practice & Revision</h3>
+                  <ul className="space-y-2 text-sm font-medium text-emerald-50">
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1 opacity-70">•</span> {todayPlan.practice}
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1 opacity-70">•</span> {todayPlan.revision}
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1 opacity-70">•</span> {todayPlan.aptitude}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
     </div>

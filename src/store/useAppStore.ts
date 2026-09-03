@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { MockQuestion } from '../data/sampleMock'
 
 export type SessionCategory = 'theory' | 'practice' | 'revision'
 export type SubjectPhase = 'Math' | 'Programming' | 'OS' | 'DBMS' | 'Networks' | 'TOC' | 'Compiler' | 'COA' | 'DigitalLogic' | 'Aptitude'
@@ -34,6 +35,16 @@ export interface MockTest {
   sectionScores: Record<SubjectPhase, number>
 }
 
+export interface ActiveTest {
+  questions: MockQuestion[]
+  currentIndex: number
+  timeLeft: number
+  answers: Record<string, string | string[]>
+  markedForReview: string[] // Store as array in Zustand, convert to Set in component
+  visited: string[]
+  title: string
+}
+
 interface AppState {
   // Settings
   userName: string
@@ -47,6 +58,11 @@ interface AppState {
   sessions: StudySession[]
   mistakes: Mistake[]
   mockTests: MockTest[]
+  activeTest: ActiveTest | null
+  
+  // Gamification
+  streakCount: number
+  lastStudyDate: string | null
   
   // Actions
   setUserName: (name: string) => void
@@ -63,6 +79,11 @@ interface AppState {
   
   addMockTest: (test: Omit<MockTest, 'id'>) => void
   deleteMockTest: (id: string) => void
+  
+  saveActiveTest: (test: ActiveTest) => void
+  clearActiveTest: () => void
+
+  updateStreak: (dateStr: string) => void
   
   clearAllData: () => void
 }
@@ -84,6 +105,11 @@ export const useAppStore = create<AppState>()(
       sessions: [],
       mistakes: [],
       mockTests: [],
+      activeTest: null,
+      
+      // Gamification
+      streakCount: 0,
+      lastStudyDate: null,
       
       // Actions
       setUserName: (name) => set({ userName: name }),
@@ -100,9 +126,36 @@ export const useAppStore = create<AppState>()(
       }),
       toggleNotifications: () => set((state) => ({ notificationsEnabled: !state.notificationsEnabled })),
       
-      addSession: (session) => set((state) => ({
-        sessions: [{ ...session, id: generateId() }, ...state.sessions]
-      })),
+      addSession: (session) => set((state) => {
+        // Streak logic
+        const dateStr = session.date.split('T')[0] // or similar
+        let newStreak = state.streakCount
+        let newLastDate = state.lastStudyDate
+
+        if (!state.lastStudyDate) {
+          newStreak = 1
+          newLastDate = dateStr
+        } else if (state.lastStudyDate !== dateStr) {
+          const lastDate = new Date(state.lastStudyDate)
+          const todayDate = new Date(dateStr)
+          const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime())
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+          
+          if (diffDays === 1) {
+            newStreak = state.streakCount + 1
+            newLastDate = dateStr
+          } else if (diffDays > 1) {
+            newStreak = 1
+            newLastDate = dateStr
+          }
+        }
+
+        return {
+          sessions: [{ ...session, id: generateId() }, ...state.sessions],
+          streakCount: newStreak,
+          lastStudyDate: newLastDate
+        }
+      }),
       deleteSession: (id) => set((state) => ({
         sessions: state.sessions.filter(s => s.id !== id)
       })),
@@ -114,17 +167,71 @@ export const useAppStore = create<AppState>()(
         mistakes: state.mistakes.filter(m => m.id !== id)
       })),
       
-      addMockTest: (test) => set((state) => ({
-        mockTests: [{ ...test, id: generateId() }, ...state.mockTests]
-      })),
+      addMockTest: (test) => set((state) => {
+        // Streak logic
+        const dateStr = test.date.split('T')[0]
+        let newStreak = state.streakCount
+        let newLastDate = state.lastStudyDate
+
+        if (!state.lastStudyDate) {
+          newStreak = 1
+          newLastDate = dateStr
+        } else if (state.lastStudyDate !== dateStr) {
+          const lastDate = new Date(state.lastStudyDate)
+          const todayDate = new Date(dateStr)
+          const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime())
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+          
+          if (diffDays === 1) {
+            newStreak = state.streakCount + 1
+            newLastDate = dateStr
+          } else if (diffDays > 1) {
+            newStreak = 1
+            newLastDate = dateStr
+          }
+        }
+
+        return {
+          mockTests: [{ ...test, id: generateId() }, ...state.mockTests],
+          streakCount: newStreak,
+          lastStudyDate: newLastDate
+        }
+      }),
       deleteMockTest: (id) => set((state) => ({
         mockTests: state.mockTests.filter(m => m.id !== id)
       })),
       
+      saveActiveTest: (test) => set({ activeTest: test }),
+      clearActiveTest: () => set({ activeTest: null }),
+
+      updateStreak: (dateStr) => set((state) => {
+        if (!state.lastStudyDate) {
+          return { streakCount: 1, lastStudyDate: dateStr }
+        }
+        if (state.lastStudyDate === dateStr) {
+          return {} // Already updated today
+        }
+        
+        const lastDate = new Date(state.lastStudyDate)
+        const todayDate = new Date(dateStr)
+        const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays === 1) {
+          return { streakCount: state.streakCount + 1, lastStudyDate: dateStr }
+        } else if (diffDays > 1) {
+          return { streakCount: 1, lastStudyDate: dateStr } // Streak broken
+        }
+        return {}
+      }),
+      
       clearAllData: () => set({
         sessions: [],
         mistakes: [],
-        mockTests: []
+        mockTests: [],
+        activeTest: null,
+        streakCount: 0,
+        lastStudyDate: null
       })
     }),
     {
