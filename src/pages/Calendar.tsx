@@ -119,7 +119,7 @@ export const Calendar = () => {
           <Info size={16} />
           <span>Scroll horizontally to view all 22 weeks. Hover over a cell for details.</span>
         </div>
-      </section>
+      </div>
 
       {/* Floating Tooltip */}
       <AnimatePresence>
