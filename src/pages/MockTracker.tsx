@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Target, TrendingUp, Trophy, Trash2, Clock, Play } from 'lucide-react'
+import { Plus, Target, TrendingUp, Trophy, Trash2, Play } from 'lucide-react'
 import { useAppStore, type SubjectPhase } from '../store/useAppStore'
 import { format, parseISO } from 'date-fns'
 import { useNavigate } from 'react-router-dom'

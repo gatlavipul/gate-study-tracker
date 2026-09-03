@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Check, ChevronLeft, ChevronRight, Clock, Flag, Save, Trash2, X, AlertTriangle } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Clock, Flag, Trash2, X } from 'lucide-react'
 import { sampleMockQuestions, type MockQuestion } from '../data/sampleMock'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAppStore } from '../store/useAppStore'
@@ -54,7 +53,7 @@ export const MockTestEngine = () => {
   useEffect(() => {
     if (isSubmitted) return
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev: number) => {
         if (prev <= 1) {
           clearInterval(timer)
           handleSubmit()

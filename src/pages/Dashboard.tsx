@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '../store/useAppStore'
 import { Clock, BookOpen, AlertCircle, TrendingUp, PlayCircle, FileText, Calendar as CalendarIcon, CheckCircle2, Flame } from 'lucide-react'
