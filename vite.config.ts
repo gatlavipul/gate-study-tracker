@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'script',
-      includeAssets: ['favicon.svg', 'icon.svg'],
+      includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'GATE 2027 CS Tracker',
         short_name: 'GATE Tracker',
@@ -20,19 +20,15 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'icon.svg',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'icon.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
-          },
-          {
-            src: 'icon.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]
